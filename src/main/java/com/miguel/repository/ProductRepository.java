@@ -1,12 +1,12 @@
 package com.miguel.repository;
 
-import java.sql.*;
-
-import java.util.ArrayList;
 import java.util.List;
 
 import com.miguel.model.Product;
 import com.miguel.util.DatabaseConnection;
+import java.sql.*;
+
+import java.util.ArrayList;
 
 public class ProductRepository implements Repository<Product> {
 
@@ -27,6 +27,7 @@ public class ProductRepository implements Repository<Product> {
     } catch (SQLException e) {
       e.printStackTrace();
     }
+
     return products;
   }
 

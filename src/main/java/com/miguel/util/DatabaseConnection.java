@@ -1,11 +1,9 @@
 package com.miguel.util;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class DatabaseConnection {
-  private static String url = "jdbc:mysql://localhost:3306/java_curso?serverTimezone=UTC";
+  private static String url = "jdbc:mysql://localhost:3306/java_curso?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrival=true";
   private static String username = "root";
   private static String password = "miguel98";
   private static Connection connection;
