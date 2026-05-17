@@ -8,6 +8,7 @@ public class Product {
   private Integer price;
   private Date registrationDate;
   private Category category;
+  private String sku;
 
   public Product() {
   }
@@ -62,7 +63,15 @@ public class Product {
   @Override
   public String toString() {
     return "Product [id=" + id + ", name=" + name + ", price=" + price + ", registrationDate=" + registrationDate
-        + ", category=" + category + "]";
+        + ", sku=" + sku + ", category=" + category + "]";
+  }
+
+  public String getSku() {
+    return sku;
+  }
+
+  public void setSku(String sku) {
+    this.sku = sku;
   }
 
 }

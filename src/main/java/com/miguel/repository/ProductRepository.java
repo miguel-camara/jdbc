@@ -3,43 +3,54 @@ package com.miguel.repository;
 import java.util.List;
 
 import com.miguel.model.*;
-import com.miguel.util.DatabaseConnection;
+// import com.miguel.util.DatabaseConnection;
 import java.sql.*;
 
 import java.util.ArrayList;
 
 public class ProductRepository implements Repository<Product> {
 
-  private Connection getConnection() throws SQLException {
-    return DatabaseConnection.getConnection();
+  // private Connection getConnection() throws SQLException {
+  // return DatabaseConnection.getConnection();
+  // }
+
+  private Connection conn;
+
+  public ProductRepository() {
+  }
+
+  public ProductRepository(Connection conn) {
+    this.conn = conn;
   }
 
   @Override
-  public List<Product> list() {
+  public List<Product> list() throws SQLException {
     List<Product> products = new ArrayList<>();
-    try (Connection conn = getConnection();
-        Statement stmt = conn.createStatement();
+    // Connection conn = getConnection();
+    try (Statement stmt = conn.createStatement();
 
         ResultSet rs = stmt
             .executeQuery("SELECT * FROM productos AS p INNER JOIN categorias AS c ON (p.categoria_id=c.id)")) {
-      // ResultSet rs = stmt.executeQuery("SELECT * FROM productos")) {
 
       while (rs.next()) {
         Product p = crearProduct(rs);
         products.add(p);
       }
-    } catch (SQLException e) {
-      e.printStackTrace();
     }
 
     return products;
   }
 
+  public void setConn(Connection conn) {
+    this.conn = conn;
+  }
+
   @Override
-  public Product byId(Long id) {
+  public Product byId(Long id) throws SQLException {
     Product product = null;
 
-    try (Connection conn = getConnection();
+    // Connection conn = getConnection();
+    try (
         PreparedStatement stmt = conn.prepareStatement(
             "SELECT * FROM productos AS p INNER JOIN categorias AS c ON (p.categoria_id=c.id) WHERE p.id = ?")) {
       // PreparedStatement stmt = conn.prepareStatement("SELECT * FROM productos WHERE
@@ -50,50 +61,54 @@ public class ProductRepository implements Repository<Product> {
           product = crearProduct(rs);
         }
       }
-    } catch (SQLException e) {
-      e.printStackTrace();
     }
     return product;
   }
 
   @Override
-  public void save(Product product) {
+  public Product save(Product product) throws SQLException {
     String sql;
     if (product.getId() != null && product.getId() > 0) {
-      sql = "UPDATE productos SET nombre=?, precio=?, categoria_id=? WHERE id=?";
+      sql = "UPDATE productos SET nombre=?, precio=?, categoria_id=?, sku=? WHERE id=?";
     } else {
-      sql = "INSERT INTO productos(nombre, precio, categoria_id, fecha_creacion) VALUES(?,?,?,?)";
+      sql = "INSERT INTO productos(nombre, precio, categoria_id, sku, fecha_creacion) VALUES(?,?,?,?,?)";
     }
-    // sql = "UPDATE productos SET nombre=?, precio=? WHERE id=?";
-    // } else {
-    // sql = "INSERT INTO productos(nombre, precio, fecha_creacion) VALUES(?,?,?)";
-    // }
-    try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+    // Connection conn = getConnection();
+    try (
+        PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
       stmt.setString(1, product.getName());
       stmt.setLong(2, product.getPrice());
       stmt.setLong(3, product.getCategory().getId());
+      stmt.setString(4, product.getSku());
 
       if (product.getId() != null && product.getId() > 0) {
-        stmt.setLong(4, product.getId());
+        stmt.setLong(5, product.getId());
       } else {
-        stmt.setDate(4, new Date(product.getRegistrationDate().getTime()));
+        stmt.setDate(5, new Date(product.getRegistrationDate().getTime()));
       }
 
       stmt.executeUpdate();
-    } catch (SQLException throwables) {
-      throwables.printStackTrace();
+
+      if (product.getId() == null) {
+        try (ResultSet rs = stmt.getGeneratedKeys()) {
+          if (rs.next()) {
+            product.setId(rs.getLong(1));
+          }
+        }
+      }
+
+      return product;
     }
 
   }
 
   @Override
-  public void delete(Long id) {
-    try (Connection conn = getConnection();
+  public void delete(Long id) throws SQLException {
+    // Connection conn = getConnection();
+    try (
         PreparedStatement stmt = conn.prepareStatement("DELETE FROM productos WHERE id=?")) {
       stmt.setLong(1, id);
       stmt.executeUpdate();
-    } catch (SQLException throwables) {
-      throwables.printStackTrace();
     }
   }
 
@@ -103,10 +118,15 @@ public class ProductRepository implements Repository<Product> {
     p.setName(rs.getString("nombre"));
     p.setPrice(rs.getInt("precio"));
     p.setRegistrationDate(rs.getDate("fecha_creacion"));
+    p.setSku(rs.getString("sku"));
     Category categoria = new Category();
     categoria.setId(rs.getLong("categoria_id"));
     categoria.setName(rs.getString("categoria"));
     p.setCategory(categoria);
     return p;
+  }
+
+  public Connection getConn() {
+    return conn;
   }
 }

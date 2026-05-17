@@ -1,13 +1,17 @@
 package com.miguel.repository;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 public interface Repository<T> {
-  List<T> list();
+  void setConn(Connection conn);
 
-  T byId(Long id);
+  List<T> list() throws SQLException;
 
-  void save(T t);
+  T byId(Long id) throws SQLException;
 
-  void delete(Long id);
+  T save(T t) throws SQLException;
+
+  void delete(Long id) throws SQLException;
 }
